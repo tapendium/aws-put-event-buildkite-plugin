@@ -1,0 +1,37 @@
+name: aws-put-event
+description: Publish event to AWS event-bridge
+author: https://tapendium.com
+requirements:
+  - aws
+configuration:
+  properties:
+    entries:
+      type: object
+      properties:
+        source:
+          type: string
+        resources:
+          type: string
+        detail-type:
+          type: string
+        detail:
+          type: string
+      required:
+        - source
+        - detail-type
+        - detail
+    debug:
+      type: boolean
+    generate-cli-skeleton:
+      type: string
+    cli-input-json:
+      type: string
+    endpoint-id:
+      type: string
+    endpoint-url:
+      type: string
+    region:
+      type: string
+  required:
+    - entries
+  additionalProperties: false

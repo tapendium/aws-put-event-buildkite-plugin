@@ -1,0 +1,67 @@
+#!/bin/bash
+
+set -eo pipefail
+
+CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+entries=("--entries")
+args=()
+
+# variable prefix -> BUILDKITE_PLUGIN_AWS_PUT_EVENT
+# get the export name from the key, e.g.
+# entries:
+#   source: 'source_value'
+#   resources: 'resources_value'
+# BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_{KEY_NAME}_SOURCE = 'source_value'
+# !name = $BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_{KEY_NAME}_SOURCE
+
+while IFS='=' read -r name _; do
+	if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_) ]]; then
+		if [[ $name =~ (SOURCE)$ ]]; then
+      entries+=("Source=${!name}")
+		fi
+		if [[ $name =~ (RESOURCES)$ ]]; then
+      entries+=("Resources=${!name}")
+		fi
+		if [[ $name =~ (DETAIL_TYPE)$ ]]; then
+      entries+=("DetailType=${!name}")
+		fi
+		if [[ $name =~ (DETAIL)$ ]]; then
+      entries+=("Detail=${!name}")
+		fi
+	fi
+
+	if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_ENDPOINT_URL) ]]; then
+    args+=("--endpoint-url" "${!name}")
+  fi
+
+	if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENDPOINT_ID) ]]; then
+    args+=("--endpoint-id" "${!name}")
+  fi
+
+	if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_CLI_INPUT_JSON) ]]; then
+    args+=("--cli-input-json" "${!name}")
+  fi
+
+  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_GENERATE_CLI_SKELETON) ]]; then
+    args+=("--generate-cli-skeleton" "${!name}")
+  fi
+
+  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_REGION) ]]; then
+    args+=("--region" "${!name}")
+  fi
+
+  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_DEBUG) ]]; then
+    args+=("--debug")
+  fi
+done < <(env | sort)
+
+echo "--- :aws: Running command in image"
+echo -ne '\033[90m$\033[0m aws events put-events ' >&2
+
+printf "%q " "${entries[@]}"
+printf "%q " "${args[@]}"
+echo
+
+aws events put-events "${entries[@]}" "${args[@]}" --output json
+

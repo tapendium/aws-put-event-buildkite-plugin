@@ -1,0 +1,13 @@
+version: "2"
+
+services:
+  lint:
+    image: buildkite/plugin-linter
+    command: ["--id", "tapendium/aws-put-event"]
+    volumes:
+      - ".:/plugin:ro"
+
+  tests:
+    image: buildkite/plugin-tester
+    volumes:
+      - ".:/plugin:ro"
