@@ -37,33 +37,33 @@ fi
 echo "--- Sending event"
 
 while IFS='=' read -r name _; do
-	if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_) ]]; then
-		if [[ $name =~ (SOURCE)$ ]]; then
+  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_) ]]; then
+    if [[ $name =~ (SOURCE)$ ]]; then
       entries+=("Source=${!name}")
-		fi
-		if [[ $name =~ (RESOURCES)$ ]]; then
+    fi
+    if [[ $name =~ (RESOURCES)$ ]]; then
       entries+=("Resources=${!name}")
-		fi
-		if [[ $name =~ (DETAIL_TYPE)$ ]]; then
+    fi
+    if [[ $name =~ (DETAIL_TYPE)$ ]]; then
       entries+=("DetailType=${!name}")
-		fi
+    fi
     if [[ $name =~ (EVENT_BUS_NAME)$ ]]; then
       entries+=("EventBusName=${!name}")
     fi
     if [[ $name =~ (TRACE_HEADER)$ ]]; then
       entries+=("TraceHeader=${!name}")
     fi
-	fi
+  fi
 
-	if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_ENDPOINT_URL) ]]; then
+  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_ENDPOINT_URL) ]]; then
     args+=("--endpoint-url" "${!name}")
   fi
 
-	if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENDPOINT_ID) ]]; then
+  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENDPOINT_ID) ]]; then
     args+=("--endpoint-id" "${!name}")
   fi
 
-	if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_CLI_INPUT_JSON) ]]; then
+  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_CLI_INPUT_JSON) ]]; then
     args+=("--cli-input-json" "${!name}")
   fi
 
