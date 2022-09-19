@@ -4,16 +4,37 @@ set -eo pipefail
 
 CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# shellcheck source=lib/shared.sh
+. "$CWD/../lib/shared.sh"
+
 entries=("--entries")
 args=()
 
-# variable prefix -> BUILDKITE_PLUGIN_AWS_PUT_EVENT
-# get the export name from the key, e.g.
-# entries:
-#   source: 'source_value'
-#   resources: 'resources_value'
-# BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_{KEY_NAME}_SOURCE = 'source_value'
-# !name = $BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_{KEY_NAME}_SOURCE
+[ -z "$ENTRY_DETAIL" ] && {
+  echo "ENTRY_DETAIL environment not defined. Exiting" 1>&2
+  exit 1
+}
+
+[ -z "$BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_SOURCE" ] && {
+  echo "entries > source not defined. Exiting" 1>&2
+  exit 1
+}
+
+[ -z "$BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_DETAIL_TYPE" ] && {
+  echo "entries > detail-type not defined. Exiting" 1>&2
+  exit 1
+}
+
+[ -z "$BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_EVENT_BUS_NAME" ] && {
+  echo "entries > event-bus-name not defined. Exiting" 1>&2
+  exit 1
+}
+
+if [[ -n "${ENTRY_DETAIL:-}" ]] ; then
+    entries+=("Detail=${ENTRY_DETAIL}")
+fi
+
+echo "--- Sending event"
 
 while IFS='=' read -r name _; do
 	if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_) ]]; then
@@ -26,9 +47,12 @@ while IFS='=' read -r name _; do
 		if [[ $name =~ (DETAIL_TYPE)$ ]]; then
       entries+=("DetailType=${!name}")
 		fi
-		if [[ $name =~ (DETAIL)$ ]]; then
-      entries+=("Detail=${!name}")
-		fi
+    if [[ $name =~ (EVENT_BUS_NAME)$ ]]; then
+      entries+=("EventBusName=${!name}")
+    fi
+    if [[ $name =~ (TRACE_HEADER)$ ]]; then
+      entries+=("TraceHeader=${!name}")
+    fi
 	fi
 
 	if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_ENDPOINT_URL) ]]; then
@@ -56,6 +80,15 @@ while IFS='=' read -r name _; do
   fi
 done < <(env | sort)
 
+# debugger
+# [[ "${entries[@]}" != "Source" ]] && {
+#   printf "%q " "${entries[@]}"
+#   echo
+#   printf "%q " "${args[@]}"
+#   echo "\ndebug in testing"
+#   exit 1;
+# }
+
 echo "--- :aws: Running command in image"
 echo -ne '\033[90m$\033[0m aws events put-events ' >&2
 
@@ -63,5 +96,5 @@ printf "%q " "${entries[@]}"
 printf "%q " "${args[@]}"
 echo
 
-aws events put-events "${entries[@]}" "${args[@]}" --output json
+put_events "${entries[@]}" "${args[@]}"
 

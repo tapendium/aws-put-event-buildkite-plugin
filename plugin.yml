@@ -14,12 +14,14 @@ configuration:
           type: string
         detail-type:
           type: string
-        detail:
+        event-bus-name:
+          type: string
+        trace-header:
           type: string
       required:
         - source
         - detail-type
-        - detail
+        - event-bus-name
     debug:
       type: boolean
     generate-cli-skeleton:

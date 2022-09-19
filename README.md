@@ -6,13 +6,16 @@ A [Buildkite Plugin](https://buildkite.com/docs/agent/v3/plugins) to interact wi
 
 ```yml
 steps:
-  - command: 'echo \$SECRET_A' 
+  - command:
+      - echo 'your commands'
+      - export ENTRY_DETAIL='{"detail":"value"}' # required field
     plugins:
       - tapendium/aws-put-event:
-          region: ap-southeast-2
           entries:
             source: 'source_name'
             resources: 'resource1,resource2'
+            detail-type: 'DetailName'
+            event-bus-name: 'EventBusArn'
 ```
 
 ## Developing
