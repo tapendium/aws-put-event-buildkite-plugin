@@ -9,13 +9,44 @@ steps:
   - command:
       - echo 'your commands'
       - export ENTRY_DETAIL='{"detail":"value"}' # required field
+      - export ENTRY_DETAIL1='{"detail":"value"}' # required field
     plugins:
       - tapendium/aws-put-event:
           entries:
-            source: 'source_name'
-            resources: 'resource1,resource2'
-            detail-type: 'DetailName'
-            event-bus-name: 'EventBusArn'
+            - source: 'source_name'
+              resources: 'resource1,resource2'
+              detail-type: 'DetailName'
+              event-bus-name: 'EventBusArn'
+              detail-env: 'ENTRY_DETAIL'
+            - source: 'source_name'
+              resources: 'resource1,resource2'
+              detail-type: 'DetailName'
+              event-bus-name: 'EventBusArn'
+              detail-env: 'ENTRY_DETAIL1'
+```
+
+- or use the plugin as
+
+```yml
+steps:
+  - command:
+      - echo 'your commands'
+    env:
+      - ENTRY_DETAIL: '{"detail":"value"}'
+      - ENTRY_DETAIL1: '{"detail":"value"}'
+    plugins:
+      - tapendium/aws-put-event:
+          entries:
+            - source: 'source_name'
+              resources: 'resource1,resource2'
+              detail-type: 'DetailName'
+              event-bus-name: 'EventBusArn'
+              detail-env: 'ENTRY_DETAIL'
+            - source: 'source_name'
+              resources: 'resource1,resource2'
+              detail-type: 'DetailName'
+              event-bus-name: 'EventBusArn'
+              detail-env: 'ENTRY_DETAIL1'
 ```
 
 ## Developing
