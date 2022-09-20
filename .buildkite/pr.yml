@@ -4,7 +4,7 @@ steps:
       docker-compose#v3.9.0:
         run: tests
 
-  - label: ":lint-remover: Run lint"
-    plugins:
-      docker-compose#v3.9.0:
-        run: lint
+  # - label: ":lint-remover: Run lint"
+  #   plugins:
+  #     docker-compose#v3.9.0:
+  #       run: lint
