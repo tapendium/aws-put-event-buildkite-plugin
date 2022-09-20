@@ -7,7 +7,7 @@ prefix="BUILDKITE_PLUGIN_AWS_PUT_EVENT"
 prefix_entries="BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES"
 
 function aws() {
-	echo ${SECRET_VALUE:-secret}
+	echo "Runs mock aws cli"
 }
 
 @test "Runs and failed when entry not defined" {

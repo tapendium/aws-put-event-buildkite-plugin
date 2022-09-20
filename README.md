@@ -11,7 +11,7 @@ steps:
       - export ENTRY_DETAIL='{"detail":"value"}' # required field
       - export ENTRY_DETAIL1='{"detail":"value"}' # required field
     plugins:
-      - tapendium/aws-put-event:
+      - tapendium/aws-put-event#v1.0.0:
           entries:
             - source: 'source_name'
               resources: 'resource1,resource2'
@@ -35,7 +35,7 @@ steps:
       - ENTRY_DETAIL: '{"detail":"value"}'
       - ENTRY_DETAIL1: '{"detail":"value"}'
     plugins:
-      - tapendium/aws-put-event:
+      - tapendium/aws-put-event#v1.0.0:
           entries:
             - source: 'source_name'
               resources: 'resource1,resource2'
@@ -47,6 +47,27 @@ steps:
               detail-type: 'DetailName'
               event-bus-name: 'EventBusArn'
               detail-env: 'ENTRY_DETAIL1'
+```
+
+- or 
+
+```yml
+steps:
+  - command:
+      - echo 'your commands'
+    plugins:
+      - tapendium/aws-put-event#v1.0.0:
+          entries:
+            - source: 'source_name'
+              resources: 'resource1,resource2'
+              detail-type: 'DetailName'
+              event-bus-name: 'EventBusArn'
+              detail: '"{"detail":"value"}"'
+            - source: 'source_name'
+              resources: 'resource1,resource2'
+              detail-type: 'DetailName'
+              event-bus-name: 'EventBusArn'
+              detail: '"{"detail":"value"}"'
 ```
 
 ## Developing
