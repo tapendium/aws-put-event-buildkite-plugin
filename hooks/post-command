@@ -118,7 +118,6 @@ entries+=("$entry_join")
 # }
 
 echo "--- Sending event"
-echo "--- :aws: Running command in image"
 echo -ne '\033[90m$\033[0m aws events put-events ' >&2
 
 printf "%q " "${entries[@]}"
