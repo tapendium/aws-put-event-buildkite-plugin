@@ -6,13 +6,68 @@ A [Buildkite Plugin](https://buildkite.com/docs/agent/v3/plugins) to interact wi
 
 ```yml
 steps:
-  - command: 'echo \$SECRET_A' 
+  - command:
+      - echo 'your commands'
+      - export ENTRY_DETAIL='{"detail":"value"}' # required field
+      - export ENTRY_DETAIL1='{"detail":"value"}' # required field
     plugins:
-      - tapendium/aws-put-event:
-          region: ap-southeast-2
+      - tapendium/aws-put-event#v1.0.0:
           entries:
-            source: 'source_name'
-            resources: 'resource1,resource2'
+            - source: 'source_name'
+              resources: 'resource1,resource2'
+              detail-type: 'DetailName'
+              event-bus-name: 'EventBusArn'
+              detail-env: 'ENTRY_DETAIL'
+            - source: 'source_name'
+              resources: 'resource1,resource2'
+              detail-type: 'DetailName'
+              event-bus-name: 'EventBusArn'
+              detail-env: 'ENTRY_DETAIL1'
+```
+
+- or use the plugin as
+
+```yml
+steps:
+  - command:
+      - echo 'your commands'
+    env:
+      - ENTRY_DETAIL: '{"detail":"value"}'
+      - ENTRY_DETAIL1: '{"detail":"value"}'
+    plugins:
+      - tapendium/aws-put-event#v1.0.0:
+          entries:
+            - source: 'source_name'
+              resources: 'resource1,resource2'
+              detail-type: 'DetailName'
+              event-bus-name: 'EventBusArn'
+              detail-env: 'ENTRY_DETAIL'
+            - source: 'source_name'
+              resources: 'resource1,resource2'
+              detail-type: 'DetailName'
+              event-bus-name: 'EventBusArn'
+              detail-env: 'ENTRY_DETAIL1'
+```
+
+- or 
+
+```yml
+steps:
+  - command:
+      - echo 'your commands'
+    plugins:
+      - tapendium/aws-put-event#v1.0.0:
+          entries:
+            - source: 'source_name'
+              resources: 'resource1,resource2'
+              detail-type: 'DetailName'
+              event-bus-name: 'EventBusArn'
+              detail: '"{"detail":"value"}"'
+            - source: 'source_name'
+              resources: 'resource1,resource2'
+              detail-type: 'DetailName'
+              event-bus-name: 'EventBusArn'
+              detail: '"{"detail":"value"}"'
 ```
 
 ## Developing

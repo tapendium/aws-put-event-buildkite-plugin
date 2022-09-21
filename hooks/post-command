@@ -1,0 +1,128 @@
+#!/bin/bash
+
+set -eo pipefail
+
+CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=lib/shared.sh
+. "$CWD/../lib/shared.sh"
+
+entries=("--entries")
+args=()
+entry_count=0
+entry=()
+
+[ -z "$BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_0_SOURCE" ] && {
+  echo "At least one entry needs to be defined" 1>&2
+  exit 1
+}
+
+while IFS='=' read -r name _; do
+  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_[0-9]+) ]]; then
+    prefix="BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_${entry_count}_"
+    detail_arg="${prefix}DETAIL"
+    source_arg="${prefix}SOURCE"
+    detail_type_arg="${prefix}DETAIL_TYPE"
+    event_bus_name_arg="${prefix}EVENT_BUS_NAME"
+
+    [ -z "${!detail_arg}" ] && {
+      echo "entries > detail not defined. Exiting" 1>&2
+      exit 1
+    }
+
+    [ -z "${!source_arg}" ] && {
+      echo "entries > source not defined. Exiting" 1>&2
+      exit 1
+    }
+
+    [ -z "${!detail_type_arg}" ] && {
+      echo "entries > detail-type not defined. Exiting" 1>&2
+      exit 1
+    }
+
+    [ -z "${!event_bus_name_arg}" ] && {
+      echo "entries > event-bus-name not defined. Exiting" 1>&2
+      exit 1
+    }
+
+    # if entry increments, reset the entry and increment the counter
+    if ! [[ $name =~ (${entry_count}) ]]; then
+      entry_join=$(IFS=, ; echo "${entry[*]}")
+      entries+=("$entry_join")
+      entry_count=$((entry_count+1))
+      entry=()
+    fi
+
+    if [[ $name =~ (DETAIL_ENV)$ ]] ; then
+      detail_env_key="${!name}"
+      detail_env_val="${!detail_env_key}"
+      entry+=("Detail=${detail_env_val}")
+    elif [[ $name =~ (DETAIL)$ ]]; then
+      entry+=("Detail=${!name}")
+    fi
+
+    if [[ $name =~ (SOURCE)$ ]]; then
+      entry+=("Source=${!name}")
+    fi
+    if [[ $name =~ (RESOURCES)$ ]]; then
+      entry+=("Resources=${!name}")
+    fi
+    if [[ $name =~ (DETAIL_TYPE)$ ]]; then
+      entry+=("DetailType=${!name}")
+    fi
+    if [[ $name =~ (EVENT_BUS_NAME)$ ]]; then
+      entry+=("EventBusName=${!name}")
+    fi
+    if [[ $name =~ (TRACE_HEADER)$ ]]; then
+      entry+=("TraceHeader=${!name}")
+    fi
+  fi
+
+  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_ENDPOINT_URL) ]]; then
+    args+=("--endpoint-url" "${!name}")
+  fi
+
+  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENDPOINT_ID) ]]; then
+    args+=("--endpoint-id" "${!name}")
+  fi
+
+  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_CLI_INPUT_JSON) ]]; then
+    args+=("--cli-input-json" "${!name}")
+  fi
+
+  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_GENERATE_CLI_SKELETON) ]]; then
+    args+=("--generate-cli-skeleton" "${!name}")
+  fi
+
+  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_REGION) ]]; then
+    args+=("--region" "${!name}")
+  fi
+
+  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_DEBUG) ]]; then
+    args+=("--debug")
+  fi
+done < <(env | sort)
+
+# append last entry
+entry_join=$(IFS=, ; echo "${entry[*]}")
+entries+=("$entry_join")
+
+# debugger
+# [[ "${entries[@]}" != "Source" ]] && {
+#   echo "$entry_join"
+#   printf "%q " "${entries[@]}"
+#   echo
+#   printf "%q " "${args[@]}"
+#   echo "\ndebug in testing"
+#   exit 1;
+# }
+
+echo "--- Sending event"
+echo -ne '\033[90m$\033[0m aws events put-events ' >&2
+
+printf "%q " "${entries[@]}"
+printf "%q " "${args[@]}"
+echo
+
+put_events "${entries[@]}" "${args[@]}"
+
