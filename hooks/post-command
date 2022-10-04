@@ -21,12 +21,13 @@ while IFS='=' read -r name _; do
   if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_[0-9]+) ]]; then
     prefix="BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_${entry_count}_"
     detail_arg="${prefix}DETAIL"
+    detail_env_arg="${prefix}DETAIL_ENV"
     source_arg="${prefix}SOURCE"
     detail_type_arg="${prefix}DETAIL_TYPE"
     event_bus_name_arg="${prefix}EVENT_BUS_NAME"
 
-    [ -z "${!detail_arg}" ] && {
-      echo "entries > detail not defined. Exiting" 1>&2
+    [ -z "${!detail_arg}" ] && [ -z "${!detail_env_arg}" ] && {
+      echo "entries > detail or detail-env not defined. Exiting" 1>&2
       exit 1
     }
 
