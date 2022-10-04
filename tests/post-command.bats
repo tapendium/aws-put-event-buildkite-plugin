@@ -22,11 +22,11 @@ function aws() {
   export -f aws
 	run "$post_command_hook"
 	assert_failure
-	assert_output --partial "entries > detail not defined. Exiting"
+	assert_output --partial "entries > detail or detail-env not defined. Exiting"
 }
 
 @test "Runs and failed when detail-type not defined" {
-  export ${prefix_entries}_0_DETAIL='{"detail":"value with space"}'
+  export ${prefix_entries}_0_DETAIL_ENV='HELLO'
   export ${prefix_entries}_0_SOURCE="sourcevalue"
   export -f aws
 	run "$post_command_hook"
@@ -66,7 +66,7 @@ function aws() {
   export -f aws
 	run "$post_command_hook"
 	assert_failure
-	assert_output --partial "entries > detail not defined. Exiting"
+	assert_output --partial "entries > detail or detail-env not defined. Exiting"
 }
 
 @test "Runs with no errors with multiple entries" {
