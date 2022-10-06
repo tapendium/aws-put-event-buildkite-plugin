@@ -7,22 +7,24 @@ CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/shared.sh
 . "$CWD/../lib/shared.sh"
 
-entries=("--entries")
-args=()
-entry_count=0
-entry=()
 ENTRIES_SIZE=0
 
-# Iterate and count the size
+# interate and ENTRIES_SIZE 
 while IFS='=' read -r name _; do
   [[ $name =~ .*([0-9]) ]]
   ENTRIES_INDEX=${BASH_REMATCH[1]}
   ENTRY_VAR_NAME="ENTRY_${ENTRIES_INDEX}"
+  declare "ENTRY_ARG_${COUNTER}=''"
   [ -z "${!ENTRY_VAR_NAME}" ] && {
     export ENTRY_${ENTRIES_INDEX}=0
   }
   ENTRIES_SIZE=$(( ENTRIES_SIZE > ENTRIES_INDEX ? ENTRIES_SIZE : ENTRIES_INDEX ))
 done < <(env | sort | grep ^BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_[0-9])
+
+[ $ENTRIES_SIZE -eq 0 ] && {
+  echo "At least one entry needs to be defined" 1>&2
+  exit 1
+}
 
 # validate entries
 echo [Entries Size] $(( $ENTRIES_SIZE + 1 ))
@@ -95,153 +97,83 @@ done
   exit 1
 }
 
-# use bc to store the record
-
-[ -z "$BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_0_SOURCE" ] && {
-  echo "At least one entry needs to be defined" 1>&2
-  exit 1
-}
-
-# assign entries
 while IFS='=' read -r name _; do
   [[ $name =~ .*([0-9]) ]]
   ENTRIES_INDEX=${BASH_REMATCH[1]}
+  DETAIL_ENV="BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_${ENTRIES_INDEX}_DETAIL_ENV"
+  ENTRY_ARG_NAME="ENTRY_ARG_${ENTRIES_INDEX}"
+  ENTRY_ARG=${!ENTRY_ARG_NAME}
 
-  if [[ $name =~ (DETAIL_ENV)$ ]] ; then
+  if [[ -n $DETAIL_ENV ]] && [[ $ENTRY_ARG != *"Detail"* ]]; then
     detail_env_key="${!name}"
     detail_env_val="${!detail_env_key}"
-    eval "ENTRY_ARG_${ENTRIES_INDEX}+=(Detail=${detail_env_val})"
-  elif [[ $name =~ (DETAIL)$ ]]; then
-    eval "ENTRY_ARG_${ENTRIES_INDEX}+=(Detail=${!name})"
+    eval "ENTRY_ARG_${ENTRIES_INDEX}+=,Detail=${detail_env_val}"
+  fi
+
+  if [[ $name =~ (DETAIL)$ ]] && [[ $ENTRY_ARG != *"Detail"* ]]; then
+    eval "ENTRY_ARG_${ENTRIES_INDEX}+=,Detail=${!name}"
   fi
 
   if [[ $name =~ (SOURCE)$ ]]; then
-    eval "ENTRY_ARG_${ENTRIES_INDEX}+=(Source=${!name})"
+    eval "ENTRY_ARG_${ENTRIES_INDEX}+=,Source=${!name}"
   fi
   if [[ $name =~ (RESOURCES)$ ]]; then
-    eval "ENTRY_ARG_${ENTRIES_INDEX}+=(Resources=${!name})"
+    eval "ENTRY_ARG_${ENTRIES_INDEX}+=,Resources=${!name}"
   fi
   if [[ $name =~ (DETAIL_TYPE)$ ]]; then
-    eval "ENTRY_ARG_${ENTRIES_INDEX}+=(DetailType=${!name})"
+    eval "ENTRY_ARG_${ENTRIES_INDEX}+=,DetailType=${!name}"
   fi
   if [[ $name =~ (EVENT_BUS_NAME)$ ]]; then
-    eval "ENTRY_ARG_${ENTRIES_INDEX}+=(EventBusName=${!name})"
+    eval "ENTRY_ARG_${ENTRIES_INDEX}+=,EventBusName=${!name}"
   fi
   if [[ $name =~ (TRACE_HEADER)$ ]]; then
-    eval "ENTRY_ARG_${ENTRIES_INDEX}+=(TraceHeader=${!name})"
+    eval "ENTRY_ARG_${ENTRIES_INDEX}+=,TraceHeader=${!name}"
   fi
 done < <(env | sort | grep ^BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_[0-9])
 
+ADDITIONAL_ARGS=()
 while IFS='=' read -r name _; do
-  if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_[0-9]+) ]]; then
-    prefix="BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_${entry_count}_"
-    detail_arg="${prefix}DETAIL"
-    detail_env_arg="${prefix}DETAIL_ENV"
-    source_arg="${prefix}SOURCE"
-    detail_type_arg="${prefix}DETAIL_TYPE"
-    event_bus_name_arg="${prefix}EVENT_BUS_NAME"
-
-    [ -z "${!detail_arg}" ] && [ -z "${!detail_env_arg}" ] && {
-      echo "entries > detail or detail-env not defined. Exiting" 1>&2
-      exit 1
-    }
-
-    [ -z "${!source_arg}" ] && {
-      echo "entries > source not defined. Exiting" 1>&2
-      exit 1
-    }
-
-    [ -z "${!detail_type_arg}" ] && {
-      echo "entries > detail-type not defined. Exiting" 1>&2
-      exit 1
-    }
-
-    [ -z "${!event_bus_name_arg}" ] && {
-      echo "entries > event-bus-name not defined. Exiting" 1>&2
-      exit 1
-    }
-
-    # if entry increments, reset the entry and increment the counter
-    if ! [[ $name =~ (${entry_count}) ]]; then
-      entry_join=$(IFS=, ; echo "${entry[*]}")
-      entries+=("$entry_join")
-      entry_count=$((entry_count+1))
-      entry=()
-    fi
-
-    if [[ $name =~ (DETAIL_ENV)$ ]] ; then
-      # S3_URL='http:...'
-      # detail-env: 'S3_URL'
-      # DETAIL_ENV = 'S3_URL'
-      detail_env_key="${!name}"
-      detail_env_val="${!detail_env_key}"
-      entry+=("Detail=${detail_env_val}")
-    elif [[ $name =~ (DETAIL)$ ]]; then
-      entry+=("Detail=${!name}")
-    fi
-
-    if [[ $name =~ (SOURCE)$ ]]; then
-      entry+=("Source=${!name}")
-    fi
-    if [[ $name =~ (RESOURCES)$ ]]; then
-      entry+=("Resources=${!name}")
-    fi
-    if [[ $name =~ (DETAIL_TYPE)$ ]]; then
-      entry+=("DetailType=${!name}")
-    fi
-    if [[ $name =~ (EVENT_BUS_NAME)$ ]]; then
-      entry+=("EventBusName=${!name}")
-    fi
-    if [[ $name =~ (TRACE_HEADER)$ ]]; then
-      entry+=("TraceHeader=${!name}")
-    fi
-  fi
-
   if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_ENDPOINT_URL) ]]; then
-    args+=("--endpoint-url" "${!name}")
+    ADDITIONAL_ARGS+=("--endpoint-url" "${!name}")
   fi
 
   if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENDPOINT_ID) ]]; then
-    args+=("--endpoint-id" "${!name}")
+    ADDITIONAL_ARGS+=("--endpoint-id" "${!name}")
   fi
 
   if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_CLI_INPUT_JSON) ]]; then
-    args+=("--cli-input-json" "${!name}")
+    ADDITIONAL_ARGS+=("--cli-input-json" "${!name}")
   fi
 
   if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_GENERATE_CLI_SKELETON) ]]; then
-    args+=("--generate-cli-skeleton" "${!name}")
+    ADDITIONAL_ARGS+=("--generate-cli-skeleton" "${!name}")
   fi
 
   if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_REGION) ]]; then
-    args+=("--region" "${!name}")
+    ADDITIONAL_ARGS+=("--region" "${!name}")
   fi
 
   if [[ $name =~ ^(BUILDKITE_PLUGIN_AWS_PUT_EVENT_DEBUG) ]]; then
-    args+=("--debug")
+    ADDITIONAL_ARGS+=("--debug")
   fi
-done < <(env | sort)
+done < <(env | sort | grep ^BUILDKITE_PLUGIN_AWS_PUT)
 
-# append last entry
-entry_join=$(IFS=, ; echo "${entry[*]}")
-entries+=("$entry_join")
+ASSIGN_COUNTER=0
+ENTRIES=("--entries")
+while [ $ASSIGN_COUNTER -le $ENTRIES_SIZE ]
+do
+  ENTRY_ARG_ARR_NAME="ENTRY_ARG_$ASSIGN_COUNTER[*]"
+  ENTRY_ARG_ARR=${!ENTRY_ARG_ARR_NAME}
+  ENTRY_JOIN=$(IFS=, ; echo "${ENTRY_ARG_ARR}")
 
-# debugger
-# [[ "${entries[@]}" != "Source" ]] && {
-#   echo "$entry_join"
-#   printf "%q " "${entries[@]}"
-#   echo
-#   printf "%q " "${args[@]}"
-#   echo "\ndebug in testing"
-#   exit 1;
-# }
+  echo ENTRY_ARG_ARR_NAME $ENTRY_ARG_ARR_NAME
+  echo entry_join "${ENTRY_JOIN:1}"
+  ENTRIES+=("${ENTRY_JOIN:1}")
 
-echo "--- Sending event"
-echo -ne '\033[90m$\033[0m aws events put-events ' >&2
+  ASSIGN_COUNTER=$(( $ASSIGN_COUNTER + 1 ))
+done
 
-printf "%q " "${entries[@]}"
-printf "%q " "${args[@]}"
-echo
+echo "--- [PUBLISH EVENT]"
 
-put_events "${entries[@]}" "${args[@]}"
+put_events "${ENTRIES[@]}" "${ADDITIONAL_ARGS[@]}"
 
