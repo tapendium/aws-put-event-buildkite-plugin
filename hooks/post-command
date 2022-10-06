@@ -165,15 +165,12 @@ do
   ENTRY_ARG_ARR_NAME="ENTRY_ARG_$ASSIGN_COUNTER[*]"
   ENTRY_ARG_ARR=${!ENTRY_ARG_ARR_NAME}
   ENTRY_JOIN=$(IFS=, ; echo "${ENTRY_ARG_ARR}")
-
-  echo ENTRY_ARG_ARR_NAME $ENTRY_ARG_ARR_NAME
-  echo entry_join "${ENTRY_JOIN:1}"
   ENTRIES+=("${ENTRY_JOIN:1}")
-
   ASSIGN_COUNTER=$(( $ASSIGN_COUNTER + 1 ))
 done
 
-echo "--- [PUBLISH EVENT]"
+echo "[PUBLISH EVENT]"
+echo "[RNNNING COMMAND]"
+echo "aws events put-events" "${ENTRIES[@]}" "${ADDITIONAL_ARGS[@]}"
 
 put_events "${ENTRIES[@]}" "${ADDITIONAL_ARGS[@]}"
-
