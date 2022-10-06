@@ -18,16 +18,17 @@ while IFS='=' read -r name _; do
   [ -z "${!ENTRY_VAR_NAME}" ] && {
     export ENTRY_${ENTRIES_INDEX}=0
   }
-  ENTRIES_SIZE=$(( ENTRIES_SIZE > ENTRIES_INDEX ? ENTRIES_SIZE : ENTRIES_INDEX ))
+  ENTRIES_SIZE=$(( ENTRIES_SIZE >= ENTRIES_INDEX + 1 ? ENTRIES_SIZE : ENTRIES_INDEX + 1 ))
 done < <(env | sort | grep ^BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_[0-9])
 
+
 [ $ENTRIES_SIZE -eq 0 ] && {
-  echo "At least one entry needs to be defined" 1>&2
+  echo "[ERROR] At least one entry needs to be defined" 1>&2
   exit 1
 }
 
 # validate entries
-echo [Entries Size] $(( $ENTRIES_SIZE + 1 ))
+echo [Entries Size] $(( $ENTRIES_SIZE ))
 while IFS='=' read -r name _; do
   [[ $name =~ .*([0-9]) ]]
   ENTRIES_INDEX=${BASH_REMATCH[1]}
@@ -58,7 +59,7 @@ done < <(env | sort | grep ^BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_[0-9])
 # Report
 COUNTER=0
 VALID=1
-while [ $COUNTER -le $ENTRIES_SIZE ]
+while [ $COUNTER -lt $ENTRIES_SIZE ]
 do
   ENTRY="ENTRY_$COUNTER"
   if [ $(( ENTRY_$COUNTER )) -eq 0 ]; then
@@ -104,14 +105,14 @@ while IFS='=' read -r name _; do
   ENTRY_ARG_NAME="ENTRY_ARG_${ENTRIES_INDEX}"
   ENTRY_ARG=${!ENTRY_ARG_NAME}
 
-  if [[ -n $DETAIL_ENV ]] && [[ $ENTRY_ARG != *"Detail"* ]]; then
+  if [[ -n $DETAIL_ENV ]] && [[ $name =~ (DETAIL_ENV)$ ]] && [[ $ENTRY_ARG != *"Detail"* ]]; then
     detail_env_key="${!name}"
     detail_env_val="${!detail_env_key}"
     eval "ENTRY_ARG_${ENTRIES_INDEX}+=,Detail=${detail_env_val}"
   fi
 
   if [[ $name =~ (DETAIL)$ ]] && [[ $ENTRY_ARG != *"Detail"* ]]; then
-    eval "ENTRY_ARG_${ENTRIES_INDEX}+=,Detail=${!name}"
+    eval "ENTRY_ARG_${ENTRIES_INDEX}+=,Detail=$(echo ${!name} | jq -R)"
   fi
 
   if [[ $name =~ (SOURCE)$ ]]; then
@@ -160,7 +161,7 @@ done < <(env | sort | grep ^BUILDKITE_PLUGIN_AWS_PUT)
 
 ASSIGN_COUNTER=0
 ENTRIES=("--entries")
-while [ $ASSIGN_COUNTER -le $ENTRIES_SIZE ]
+while [ $ASSIGN_COUNTER -lt $ENTRIES_SIZE ]
 do
   ENTRY_ARG_ARR_NAME="ENTRY_ARG_$ASSIGN_COUNTER[*]"
   ENTRY_ARG_ARR=${!ENTRY_ARG_ARR_NAME}
