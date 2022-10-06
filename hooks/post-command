@@ -21,12 +21,6 @@ while IFS='=' read -r name _; do
   ENTRIES_SIZE=$(( ENTRIES_SIZE >= ENTRIES_INDEX + 1 ? ENTRIES_SIZE : ENTRIES_INDEX + 1 ))
 done < <(env | sort | grep ^BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES_[0-9])
 
-
-[ $ENTRIES_SIZE -eq 0 ] && {
-  echo "[ERROR] At least one entry needs to be defined" 1>&2
-  exit 1
-}
-
 # validate entries
 echo [Entries Size] $(( $ENTRIES_SIZE ))
 while IFS='=' read -r name _; do
@@ -92,6 +86,11 @@ do
 
   COUNTER=$(( $COUNTER + 1 ))
 done
+
+[ $ENTRIES_SIZE -eq 0 ] && {
+  echo "[ERROR] At least one entry needs to be defined" 1>&2
+  VALID=0
+}
 
 [ $VALID -eq 0 ] && {
   echo "[ERROR] Process failed with errors."
