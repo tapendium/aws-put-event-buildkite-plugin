@@ -14,7 +14,7 @@ function aws() {
   export -f aws
 	run "$post_command_hook"
 	assert_failure
-	assert_output --partial "[ERROR] At least one entry needs to be defined"
+	assert_output --partial "[WARNING] At least one entry needs to be defined"
 }
 
 @test "Runs and failed when detail not defined" {
@@ -67,7 +67,7 @@ function aws() {
   export -f aws
 	run "$post_command_hook"
 	assert_failure
-	assert_output --partial "[Entries Size] 2"
+	assert_output --partial "[INFO] ENTRIES_SIZE 2"
 	assert_output --partial "Entry[1]: detail or detail-env not defined."
 }
 
@@ -83,6 +83,6 @@ function aws() {
   export -f aws
 	run "$post_command_hook"
 	assert_success
-	assert_output --partial "[Entries Size] 2"
+	assert_output --partial "[INFO] ENTRIES_SIZE 2"
 }
 
