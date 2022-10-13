@@ -134,7 +134,7 @@ done
 
 [ $VALID -eq 0 ] && {
   echo "[ERROR] Process failed with errors."
-  exit 1
+  exit 2
 }
 
 ENTRIES_ARG="--entries"
@@ -200,6 +200,7 @@ done < <(env | sort | grep "^${PREFIX}")
 
 echo "[PUBLISH EVENT]"
 echo "[RNNNING COMMAND]"
-echo "aws events put-events" "$ENTRIES_ARG" "${ADDITIONAL_ARGS[@]}"
 
-put_events "$ENTRIES_ARG" "${ADDITIONAL_ARGS[@]}"
+set -x
+aws events put-events "$ENTRIES_ARG" "${ADDITIONAL_ARGS[@]}" --output json
+set +x
