@@ -8,19 +8,19 @@ A [Buildkite Plugin](https://buildkite.com/docs/agent/v3/plugins) to interact wi
 steps:
   - command:
       - echo 'your commands'
-      - export ENTRY_DETAIL='{"detail":"value"}' # required field
-      - export ENTRY_DETAIL1='{"detail":"value"}' # required field
+      - export ENTRY_DETAIL='{"data":{"name":"authn", "path":"authn/prefix"}}' # required field
+      - export ENTRY_DETAIL1='{"data":{"name":"authn", "path":"authn/prefix"}}' # required field
     plugins:
       - tapendium/aws-put-event#v1.0.0:
           entries:
-            - source: 'source_name'
+            - source: 'authn'
               resources: 'resource1,resource2'
-              detail-type: 'DetailName'
+              detail-type: 'frontend-build-completed'
               event-bus-name: 'EventBusArn'
               detail-env: 'ENTRY_DETAIL'
-            - source: 'source_name'
+            - source: 'authn'
               resources: 'resource1,resource2'
-              detail-type: 'DetailName'
+              detail-type: 'frontend-build-completed'
               event-bus-name: 'EventBusArn'
               detail-env: 'ENTRY_DETAIL1'
 ```
@@ -32,19 +32,19 @@ steps:
   - command:
       - echo 'your commands'
     env:
-      - ENTRY_DETAIL: '{"detail":"value"}'
-      - ENTRY_DETAIL1: '{"detail":"value"}'
+      - ENTRY_DETAIL: '{"data":{"name":"authn", "path":"authn/prefix"}}'
+      - ENTRY_DETAIL1: '{"data":{"name":"authn", "path":"authn/prefix"}}'
     plugins:
       - tapendium/aws-put-event#v1.0.0:
           entries:
-            - source: 'source_name'
+            - source: 'authn'
               resources: 'resource1,resource2'
-              detail-type: 'DetailName'
+              detail-type: 'frontend-build-completed'
               event-bus-name: 'EventBusArn'
               detail-env: 'ENTRY_DETAIL'
-            - source: 'source_name'
+            - source: 'authn'
               resources: 'resource1,resource2'
-              detail-type: 'DetailName'
+              detail-type: 'frontend-build-completed'
               event-bus-name: 'EventBusArn'
               detail-env: 'ENTRY_DETAIL1'
 ```
@@ -58,16 +58,16 @@ steps:
     plugins:
       - tapendium/aws-put-event#v1.0.0:
           entries:
-            - source: 'source_name'
+            - source: 'authn'
               resources: 'resource1,resource2'
-              detail-type: 'DetailName'
+              detail-type: 'frontend-build-completed'
               event-bus-name: 'EventBusArn'
-              detail: '"{"detail":"value"}"'
-            - source: 'source_name'
+              detail: '{"data":{"name":"authn", "path":"authn/prefix"}}'
+            - source: 'authn'
               resources: 'resource1,resource2'
-              detail-type: 'DetailName'
+              detail-type: 'frontend-build-completed'
               event-bus-name: 'EventBusArn'
-              detail: '"{"detail":"value"}"'
+              detail: '{"data":{"name":"authn", "path":"authn/prefix"}}'
 ```
 
 ## Developing

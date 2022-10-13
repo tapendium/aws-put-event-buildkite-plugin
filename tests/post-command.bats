@@ -14,7 +14,7 @@ function aws() {
   export -f aws
 	run "$post_command_hook"
 	assert_failure
-	assert_output --partial "At least one entry needs to be defined"
+	assert_output --partial "[WARNING] At least one entry needs to be defined"
 }
 
 @test "Runs and failed when detail not defined" {
@@ -22,7 +22,7 @@ function aws() {
   export -f aws
 	run "$post_command_hook"
 	assert_failure
-	assert_output --partial "entries > detail or detail-env not defined. Exiting"
+	assert_output --partial "Entry[0]: detail or detail-env not defined."
 }
 
 @test "Runs and failed when detail-type not defined" {
@@ -31,7 +31,7 @@ function aws() {
   export -f aws
 	run "$post_command_hook"
 	assert_failure
-	assert_output --partial "entries > detail-type not defined. Exiting"
+	assert_output --partial "Entry[0]: detail-type not defined."
 }
 
 @test "Runs and failed when event-bus-name not defined" {
@@ -41,7 +41,7 @@ function aws() {
   export -f aws
 	run "$post_command_hook"
 	assert_failure
-	assert_output --partial "entries > event-bus-name not defined. Exiting"
+	assert_output --partial "Entry[0]: event-bus-name not defined."
 }
 
 @test "Runs with no errors with single entry" {
@@ -52,6 +52,7 @@ function aws() {
   export -f aws
 	run "$post_command_hook"
 	assert_success
+	assert_output --partial "RNNNING COMMAND"
 }
 
 @test "Runs and fails with single entry with no detail on multiple" {
@@ -66,20 +67,22 @@ function aws() {
   export -f aws
 	run "$post_command_hook"
 	assert_failure
-	assert_output --partial "entries > detail or detail-env not defined. Exiting"
+	assert_output --partial "[INFO] ENTRIES_SIZE 2"
+	assert_output --partial "Entry[1]: detail or detail-env not defined."
 }
 
 @test "Runs with no errors with multiple entries" {
-  export ${prefix_entries}_0_DETAIL='"{"detail":"value with space"}"'
+  export ${prefix_entries}_0_DETAIL='{"detail":"value with space"}'
   export ${prefix_entries}_0_SOURCE="sourcevalue"
   export ${prefix_entries}_0_DETAIL_TYPE="detailname"
   export ${prefix_entries}_0_EVENT_BUS_NAME="detailname"
-  export ${prefix_entries}_1_DETAIL='"{"detail":"value with space"}"'
+  export ${prefix_entries}_1_DETAIL='{"detail":"value with space"}'
   export ${prefix_entries}_1_SOURCE="sourcevalue"
   export ${prefix_entries}_1_DETAIL_TYPE="detailname"
   export ${prefix_entries}_1_EVENT_BUS_NAME="detailname"
   export -f aws
 	run "$post_command_hook"
 	assert_success
+	assert_output --partial "[INFO] ENTRIES_SIZE 2"
 }
 
