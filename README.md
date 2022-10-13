@@ -11,7 +11,7 @@ steps:
       - export ENTRY_DETAIL='{"data":{"name":"authn", "path":"authn/prefix"}}' # required field
       - export ENTRY_DETAIL1='{"data":{"name":"authn", "path":"authn/prefix"}}' # required field
     plugins:
-      - tapendium/aws-put-event#v1.0.0:
+      - tapendium/aws-put-event#v1.0.2:
           entries:
             - source: 'authn'
               resources: 'resource1,resource2'
@@ -35,7 +35,7 @@ steps:
       - ENTRY_DETAIL: '{"data":{"name":"authn", "path":"authn/prefix"}}'
       - ENTRY_DETAIL1: '{"data":{"name":"authn", "path":"authn/prefix"}}'
     plugins:
-      - tapendium/aws-put-event#v1.0.0:
+      - tapendium/aws-put-event#v1.0.2:
           entries:
             - source: 'authn'
               resources: 'resource1,resource2'
@@ -56,7 +56,7 @@ steps:
   - command:
       - echo 'your commands'
     plugins:
-      - tapendium/aws-put-event#v1.0.0:
+      - tapendium/aws-put-event#v1.0.2:
           entries:
             - source: 'authn'
               resources: 'resource1,resource2'
