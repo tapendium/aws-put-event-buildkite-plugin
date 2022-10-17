@@ -44,11 +44,23 @@ function aws() {
 	assert_output --partial "Entry[0]: event-bus-name not defined."
 }
 
+@test "Runs and failed when event-bus-name-env not defined" {
+  export ${prefix_entries}_0_DETAIL='{"detail":"value with space"}'
+  export ${prefix_entries}_0_SOURCE="sourcevalue"
+  export ${prefix_entries}_0_DETAIL_TYPE="detailname"
+  export ${prefix_entries}_0_EVENT_BUS_NAME_ENV="EVENT_BUS_URL"
+  export -f aws
+	run "$post_command_hook"
+	assert_failure
+	assert_output --partial "Entry[0]: event-bus-name not defined."
+}
+
 @test "Runs with no errors with single entry" {
   export ${prefix_entries}_0_DETAIL='{"detail":"value with space"}'
   export ${prefix_entries}_0_SOURCE="sourcevalue"
   export ${prefix_entries}_0_DETAIL_TYPE="detailname"
-  export ${prefix_entries}_0_EVENT_BUS_NAME="detailname"
+  export EVENT_BUS_URL="arn://testtesttest"
+  export ${prefix_entries}_0_EVENT_BUS_NAME_ENV="EVENT_BUS_URL"
   export -f aws
 	run "$post_command_hook"
 	assert_success

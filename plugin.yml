@@ -23,6 +23,8 @@ configuration:
             type: string
           event-bus-name:
             type: string
+          event-bus-name-env:
+            type: string
           trace-header:
             type: string
         oneOf:
