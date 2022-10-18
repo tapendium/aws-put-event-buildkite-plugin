@@ -54,7 +54,7 @@ do
     ! is_valid_json "${!ENTRY_DETAIL}" && {
       export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 2))
     }
-    ENTRIES[$COUNTER,0]="Detail=$( jq -R <<< "${!ENTRY_DETAIL}" )"
+    ENTRIES[$COUNTER,0]="Detail=$( jq -R '.' <<< "${!ENTRY_DETAIL}" )"
   fi
 
   if [ -z "${!ENTRY_SOURCE}" ]
