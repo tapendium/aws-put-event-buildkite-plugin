@@ -52,9 +52,11 @@ do
   else
     echo ENTRY_DETAIL ${!ENTRY_DETAIL}
     ! is_valid_json "${!ENTRY_DETAIL}" && {
+      echo "invalid json"
       export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 2))
     }
     ENTRIES[$COUNTER,0]="Detail=$( echo "${!ENTRY_DETAIL//\"/\\\"}" )"
+    echo ENTRY_DETAIL_PARSED ${ENTRIES[$COUNTER,0]}
   fi
 
   if [ -z "${!ENTRY_SOURCE}" ]
