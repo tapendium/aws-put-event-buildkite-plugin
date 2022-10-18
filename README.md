@@ -13,7 +13,7 @@ steps:
       - export ENTRY_DETAIL1='{"data":{"name":"authn", "path":"authn/prefix"}}' # required field
       - buildkite-agent meta-data set 'ENTRY_DETAIL1' $$ENTRY_DETAIL1
     plugins:
-      - tapendium/aws-put-event#v1.0.3:
+      - tapendium/aws-put-event#v1.0.4:
           entries:
             - source: 'authn'
               resources: 'resource1,resource2'
@@ -39,7 +39,7 @@ steps:
       - ENTRY_DETAIL1: '{"data":{"name":"authn", "path":"authn/prefix"}}'
       - buildkite-agent meta-data set 'ENTRY_DETAIL1' $$ENTRY_DETAIL1
     plugins:
-      - tapendium/aws-put-event#v1.0.3:
+      - tapendium/aws-put-event#v1.0.4:
           entries:
             - source: 'authn'
               resources: 'resource1,resource2'
@@ -60,7 +60,7 @@ steps:
   - command:
       - echo 'your commands'
     plugins:
-      - tapendium/aws-put-event#v1.0.3:
+      - tapendium/aws-put-event#v1.0.4:
           entries:
             - source: 'authn'
               resources: 'resource1,resource2'
