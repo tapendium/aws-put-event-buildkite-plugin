@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -eo pipefail
-
 CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=lib/shared.sh
@@ -51,8 +49,7 @@ do
     export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 1))
   else
     echo ENTRY_DETAIL ${!ENTRY_DETAIL}
-    json_pp >/dev/null 2>&1 <<<"${!ENTRY_DETAIL}"
-    [ $? -eq 0 ] || {
+    ! is_valid_json "${!ENTRY_DETAIL}" && {
       echo "invalid json"
       export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 2))
     }
