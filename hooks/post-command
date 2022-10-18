@@ -43,13 +43,14 @@ do
   then
     # assign to detail
     ENTRY_DETAIL_ENV_NAME=${!ENTRY_DETAIL_ENV}
-    export ${NUMBERED_PREFIX}DETAIL="${!ENTRY_DETAIL_ENV_NAME}"
+    export ${NUMBERED_PREFIX}DETAIL="$(buildkite-agent meta-data get "$ENTRY_DETAIL_ENV_NAME")"
   fi
 
   if [ -z "${!ENTRY_DETAIL}" ]
   then
     export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 1))
   else
+    echo ${ENTRY_DETAIL_ENV_NAME} ${!ENTRY_DETAIL_ENV_NAME}
     ! is_valid_json "${!ENTRY_DETAIL}" && {
       export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 2))
     }
@@ -73,7 +74,7 @@ do
   if [ -n "${!ENTRY_EVENT_BUS_NAME_ENV}" ]
   then
     ENTRY_EVENT_BUS_NAME_ENV_NAME=${!ENTRY_EVENT_BUS_NAME_ENV}
-    export ${NUMBERED_PREFIX}EVENT_BUS_NAME="${!ENTRY_EVENT_BUS_NAME_ENV_NAME}"
+    export ${NUMBERED_PREFIX}EVENT_BUS_NAME="$(buildkite-agent meta-data get "$ENTRY_EVENT_BUS_NAME_ENV_NAME")"
   fi
 
   if [ -z "${!ENTRY_EVENT_BUS_NAME}" ]
