@@ -50,7 +50,7 @@ do
   then
     export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 1))
   else
-    echo ${ENTRY_DETAIL_ENV_NAME} ${!ENTRY_DETAIL_ENV_NAME}
+    echo ENTRY_DETAIL ${!ENTRY_DETAIL}
     ! is_valid_json "${!ENTRY_DETAIL}" && {
       export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 2))
     }
