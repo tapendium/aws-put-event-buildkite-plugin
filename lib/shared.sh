@@ -8,5 +8,5 @@ put_events()
 }
 
 is_valid_json() {
-  jq -e . >/dev/null 2>&1 <<<"$1"
+  json_pp >/dev/null 2>&1 <<<"$1"
 }
