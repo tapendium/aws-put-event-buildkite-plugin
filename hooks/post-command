@@ -51,7 +51,8 @@ do
     export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 1))
   else
     echo ENTRY_DETAIL ${!ENTRY_DETAIL}
-    ! is_valid_json "${!ENTRY_DETAIL}" && {
+    json_pp >/dev/null 2>&1 <<<"${!ENTRY_DETAIL}"
+    [ $? -eq 0 ] || {
       echo "invalid json"
       export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 2))
     }
