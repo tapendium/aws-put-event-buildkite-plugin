@@ -8,9 +8,15 @@ CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$CWD/../lib/shared.sh"
 
 PREFIX="BUILDKITE_PLUGIN_AWS_PUT_EVENT_"
+DEBUG_FLAG="${PREFIX}DEBUG"
 PREFIX_ENTRIES="${PREFIX}ENTRIES_"
 declare -A ENTRIES
 ENTRIES_SIZE=0
+
+if [[ "${!DEBUG_FLAG:-false}" =~ (true|on|1) ]] ; then
+  echo "~~~ :hammer: Enabling debug mode"
+  set -x
+fi
 
 # interate and ENTRIES_SIZE 
 while IFS='=' read -r name _; do
@@ -42,8 +48,7 @@ do
   if [ -n "${!ENTRY_DETAIL_ENV}" ]
   then
     # assign to detail
-    ENTRY_DETAIL_ENV_NAME=${!ENTRY_DETAIL_ENV}
-    export ${NUMBERED_PREFIX}DETAIL="${!ENTRY_DETAIL_ENV_NAME}"
+    export ${NUMBERED_PREFIX}DETAIL="$(buildkite-agent meta-data get "${!ENTRY_DETAIL_ENV}")"
   fi
 
   if [ -z "${!ENTRY_DETAIL}" ]
@@ -72,8 +77,7 @@ do
 
   if [ -n "${!ENTRY_EVENT_BUS_NAME_ENV}" ]
   then
-    ENTRY_EVENT_BUS_NAME_ENV_NAME=${!ENTRY_EVENT_BUS_NAME_ENV}
-    export ${NUMBERED_PREFIX}EVENT_BUS_NAME="${!ENTRY_EVENT_BUS_NAME_ENV_NAME}"
+    export ${NUMBERED_PREFIX}EVENT_BUS_NAME="$(buildkite-agent meta-data get "${!ENTRY_EVENT_BUS_NAME_ENV}")"
   fi
 
   if [ -z "${!ENTRY_EVENT_BUS_NAME}" ]
