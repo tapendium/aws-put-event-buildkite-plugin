@@ -1,8 +1,20 @@
 steps:
   - label: ":hammer: Run unit tests"
     plugins:
-      docker-compose#v3.9.0:
+      docker-compose#v4.3.0:
         run: tests
+        # cli-version: 2
+
+  - label: ":shell: Shellcheck"
+    plugins:
+      - seek-oss/github-merged-pr#v1.1.2:
+          mode: checkout
+      - shellcheck#v1.3.0:
+          files:
+            - "hooks/*"
+            - "lib/*"
+            - "tests/*"
+          options: "-x"
 
   # - label: ":lint-remover: Run lint"
   #   plugins:

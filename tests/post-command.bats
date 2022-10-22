@@ -4,7 +4,11 @@ load '/usr/local/lib/bats/load.bash'
 
 post_command_hook="$PWD/hooks/post-command"
 prefix="BUILDKITE_PLUGIN_AWS_PUT_EVENT"
-prefix_entries="BUILDKITE_PLUGIN_AWS_PUT_EVENT_ENTRIES"
+prefix_entries="${prefix}_ENTRIES"
+
+function buildkite-agent() {
+  echo "value"
+}
 
 function aws() {
 	echo "Runs mock aws cli"
@@ -62,6 +66,7 @@ function aws() {
   export EVENT_BUS_URL="arn://testtesttest"
   export ${prefix_entries}_0_EVENT_BUS_NAME_ENV="EVENT_BUS_URL"
   export -f aws
+  export -f buildkite-agent
 	run "$post_command_hook"
 	assert_success
 	assert_output --partial "RNNNING COMMAND"

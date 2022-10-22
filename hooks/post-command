@@ -25,14 +25,14 @@ while IFS='=' read -r name _; do
   ENTRY_VAR_NAME="ENTRY_${ENTRIES_INDEX}"
   declare "ENTRY_ARG_${COUNTER}=''"
   [ -z "${!ENTRY_VAR_NAME}" ] && {
-    export ENTRY_${ENTRIES_INDEX}=0
+    export ENTRY_"${ENTRIES_INDEX}"=0
   }
   ENTRIES_SIZE=$(( ENTRIES_SIZE >= ENTRIES_INDEX + 1 ? ENTRIES_SIZE : ENTRIES_INDEX + 1 ))
 done < <(env | sort | grep "^${PREFIX_ENTRIES}[0-9]")
 
 echo [INFO] ENTRIES_SIZE $ENTRIES_SIZE
 
-for (( COUNTER=0; COUNTER<=$ENTRIES_SIZE-1; COUNTER++ ))
+for (( COUNTER=0; COUNTER<=ENTRIES_SIZE-1; COUNTER++ ))
 do
   NUMBERED_PREFIX="${PREFIX_ENTRIES}${COUNTER}_"
   ENTRY_DETAIL="${NUMBERED_PREFIX}DETAIL"
@@ -43,7 +43,7 @@ do
   ENTRY_DETAIL_TYPE="${NUMBERED_PREFIX}DETAIL_TYPE"
   ENTRY_EVENT_BUS_NAME="${NUMBERED_PREFIX}EVENT_BUS_NAME"
   ENTRY_EVENT_BUS_NAME_ENV="${NUMBERED_PREFIX}EVENT_BUS_NAME_ENV"
-  export ENTRY_VALIDATE_${COUNTER}=31 #11111
+  export ENTRY_VALIDATE_"${COUNTER}"=31 #11111
 
   if [ -n "${!ENTRY_DETAIL_ENV}" ]
   then
@@ -53,24 +53,28 @@ do
 
   if [ -z "${!ENTRY_DETAIL}" ]
   then
-    export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 1))
+    PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+    export ENTRY_VALIDATE_"${COUNTER}"="$((PREVIOUS_COUNT ^ 1))"
   else
     ! is_valid_json "${!ENTRY_DETAIL}" && {
-      export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 2))
+      PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+      export ENTRY_VALIDATE_"${COUNTER}"=$((PREVIOUS_COUNT ^ 2))
     }
     ENTRIES[$COUNTER,0]="Detail=$( echo ${!ENTRY_DETAIL} | jq -R )"
   fi
 
   if [ -z "${!ENTRY_SOURCE}" ]
   then
-    export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 4))
+    PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+    export ENTRY_VALIDATE_"${COUNTER}"=$((PREVIOUS_COUNT ^ 4))
   else
     ENTRIES[$COUNTER,1]="Source=${!ENTRY_SOURCE}"
   fi
 
   if [ -z "${!ENTRY_DETAIL_TYPE}" ]
   then
-    export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 8))
+    PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+    export ENTRY_VALIDATE_"${COUNTER}"=$((PREVIOUS_COUNT ^ 8))
   else
     ENTRIES[$COUNTER,2]="DetailType=${!ENTRY_DETAIL_TYPE}"
   fi
@@ -82,7 +86,8 @@ do
 
   if [ -z "${!ENTRY_EVENT_BUS_NAME}" ]
   then
-    export ENTRY_VALIDATE_${COUNTER}=$((ENTRY_VALIDATE_${COUNTER} ^ 16))
+    PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+    export ENTRY_VALIDATE_"${COUNTER}"=$((PREVIOUS_COUNT ^ 16))
   else
     ENTRIES[$COUNTER,3]="EventBusName=${!ENTRY_EVENT_BUS_NAME}"
   fi
@@ -100,39 +105,44 @@ do
 done
 
 VALID=1
-for (( COUNTER=0; COUNTER<=$ENTRIES_SIZE-1; COUNTER++ ))
+for (( COUNTER=0; COUNTER<=ENTRIES_SIZE-1; COUNTER++ ))
 do
-  if [ $(( ENTRY_VALIDATE_$COUNTER )) -eq 31 ]; then
+  PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+  if [ "$PREVIOUS_COUNT" -eq 31 ]; then
     continue
   fi
 
   VALID=0
 
-  [ $(( ENTRY_VALIDATE_$COUNTER & 1 )) -eq 0 ] && {
+  [ $(( PREVIOUS_COUNT & 1 )) -eq 0 ] && {
     echo "[ERROR] Entry[$COUNTER]: detail or detail-env not defined." 
   }
 
-  export ENTRY_VALIDATE_$COUNTER=$((ENTRY_VALIDATE_$COUNTER >> 1))
+  export ENTRY_VALIDATE_"$COUNTER"=$((PREVIOUS_COUNT >> 1))
 
-  [ $(( ENTRY_VALIDATE_$COUNTER & 1 )) -eq 0 ] && {
+  PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+  [ $(( PREVIOUS_COUNT & 1 )) -eq 0 ] && {
     echo "[ERROR] Entry[$COUNTER]: detail has invalid json" 
   }
 
-  export ENTRY_VALIDATE_$COUNTER=$((ENTRY_VALIDATE_$COUNTER >> 1))
+  export ENTRY_VALIDATE_"$COUNTER"=$((PREVIOUS_COUNT >> 1))
 
-  [ $(( ENTRY_VALIDATE_$COUNTER & 1 )) -eq 0 ] && {
+  PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+  [ $(( PREVIOUS_COUNT & 1 )) -eq 0 ] && {
     echo "[ERROR] Entry[$COUNTER]: source not defined." 
   }
 
-  export ENTRY_VALIDATE_$COUNTER=$((ENTRY_VALIDATE_$COUNTER >> 1))
+  export ENTRY_VALIDATE_"$COUNTER"=$((PREVIOUS_COUNT >> 1))
 
-  [ $(( ENTRY_VALIDATE_$COUNTER & 1 )) -eq 0 ] && {
+  PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+  [ $(( PREVIOUS_COUNT & 1 )) -eq 0 ] && {
     echo "[ERROR] Entry[$COUNTER]: detail-type not defined." 
   }
 
-  export ENTRY_VALIDATE_$COUNTER=$((ENTRY_VALIDATE_$COUNTER >> 1))
+  export ENTRY_VALIDATE_"$COUNTER"=$((PREVIOUS_COUNT >> 1))
 
-  [ $(( ENTRY_VALIDATE_$COUNTER & 1 )) -eq 0 ] && {
+  PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+  [ $(( PREVIOUS_COUNT & 1 )) -eq 0 ] && {
     echo "[ERROR] Entry[$COUNTER]: event-bus-name not defined." 
   }
 done
@@ -149,7 +159,7 @@ done
 }
 
 ENTRIES_ARG="--entries"
-for (( COUNTER=0; COUNTER<=$ENTRIES_SIZE-1; COUNTER++ ))
+for (( COUNTER=0; COUNTER<=ENTRIES_SIZE-1; COUNTER++ ))
 do
   if [ -n "${ENTRIES[$COUNTER,0]}" ]
   then
