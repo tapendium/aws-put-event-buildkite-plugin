@@ -10,43 +10,24 @@ steps:
       - echo 'your commands'
       - export ENTRY_DETAIL='{"data":{"name":"authn", "path":"authn/prefix"}}' # required field
       - export ENTRY_DETAIL1='{"data":{"name":"authn", "path":"authn/prefix"}}' # required field
-    plugins:
-      - tapendium/aws-put-event#v1.0.3:
-          entries:
-            - source: 'authn'
-              resources: 'resource1,resource2'
-              detail-type: 'frontend-build-completed'
-              event-bus-name: 'EventBusArn'
-              detail-env: 'ENTRY_DETAIL'
-            - source: 'authn'
-              resources: 'resource1,resource2'
-              detail-type: 'frontend-build-completed'
-              event-bus-name: 'EventBusArn'
-              detail-env: 'ENTRY_DETAIL1'
-```
-
-- or use the plugin as
-
-```yml
-steps:
-  - command:
-      - echo 'your commands'
+      - buildkite-agent meta-data set 'ENTRY_DETAIL' $$ENTRY_DETAIL
+      - buildkite-agent meta-data set 'ENTRY_DETAIL1' $$ENTRY_DETAIL1
     env:
-      - ENTRY_DETAIL: '{"data":{"name":"authn", "path":"authn/prefix"}}'
-      - ENTRY_DETAIL1: '{"data":{"name":"authn", "path":"authn/prefix"}}'
+      ENTRY_DETAIL_KEY: ENTRY_DETAIL
+      ENTRY_DETAIL1_KEY: ENTRY_DETAIL1
     plugins:
-      - tapendium/aws-put-event#v1.0.3:
+      - tapendium/aws-put-event#v1.0.4:
           entries:
             - source: 'authn'
               resources: 'resource1,resource2'
               detail-type: 'frontend-build-completed'
               event-bus-name: 'EventBusArn'
-              detail-env: 'ENTRY_DETAIL'
+              detail-env: 'ENTRY_DETAIL_KEY'
             - source: 'authn'
               resources: 'resource1,resource2'
               detail-type: 'frontend-build-completed'
               event-bus-name: 'EventBusArn'
-              detail-env: 'ENTRY_DETAIL1'
+              detail-env: 'ENTRY_DETAIL1_KEY'
 ```
 
 - or 
@@ -56,7 +37,7 @@ steps:
   - command:
       - echo 'your commands'
     plugins:
-      - tapendium/aws-put-event#v1.0.3:
+      - tapendium/aws-put-event#v1.0.4:
           entries:
             - source: 'authn'
               resources: 'resource1,resource2'
@@ -68,6 +49,36 @@ steps:
               detail-type: 'frontend-build-completed'
               event-bus-name: 'EventBusArn'
               detail: '{"data":{"name":"authn", "path":"authn/prefix"}}'
+```
+
+- matrix example
+
+```yml
+steps:
+  - group: ':eventbridge: Publish Import url'
+    depends_on: upload-frontend-group
+    steps:
+      - label: ':eventbridge: [{{matrix}}] Publish Import url'
+        commands:
+          - buildkite-agent meta-data set 'EVENT_BUS_{{matrix}}' $$SCALE_EVENT_BUS_PRIMARYEVENTBUSARN
+        env:
+          ROLE_ARN_FIELD: 'ARNs.{{matrix}}'
+          DETAIL_METADATA_KEY: 'ENTRY_DETAIL_{{matrix}}'
+          EVENT_BUS_METADATA_KEY: 'EVENT_BUS_{{matrix}}'
+        plugins:
+          - *secret-assume-role
+          - cultureamp/aws-assume-role
+          - envato/cloudformation-output#v2.1.0:
+              output:
+                - 'scale-event-bus:PrimaryEventBusArn:ap-southeast-2'
+          - tapendium/aws-put-event#v1.0.4b1:
+              debug: true
+              entries:
+                - source: 'authn'
+                  detail-env: 'DETAIL_METADATA_KEY'
+                  event-bus-name-env: 'EVENT_BUS_METADATA_KEY'
+                  detail-type: 'frontend-build-completed'
+        matrix: *matrix
 ```
 
 ## Developing

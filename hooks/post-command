@@ -48,7 +48,8 @@ do
   if [ -n "${!ENTRY_DETAIL_ENV}" ]
   then
     # assign to detail
-    export ${NUMBERED_PREFIX}DETAIL="$(buildkite-agent meta-data get "${!ENTRY_DETAIL_ENV}")"
+    META_DATA_KEY="${!ENTRY_DETAIL_ENV}"
+    export ${NUMBERED_PREFIX}DETAIL="$(buildkite-agent meta-data get "${!META_DATA_KEY}")"
   fi
 
   if [ -z "${!ENTRY_DETAIL}" ]
@@ -81,7 +82,8 @@ do
 
   if [ -n "${!ENTRY_EVENT_BUS_NAME_ENV}" ]
   then
-    export ${NUMBERED_PREFIX}EVENT_BUS_NAME="$(buildkite-agent meta-data get "${!ENTRY_EVENT_BUS_NAME_ENV}")"
+    META_DATA_KEY="${!ENTRY_EVENT_BUS_NAME_ENV}"
+    export ${NUMBERED_PREFIX}EVENT_BUS_NAME="$(buildkite-agent meta-data get "${!META_DATA_KEY}")"
   fi
 
   if [ -z "${!ENTRY_EVENT_BUS_NAME}" ]
