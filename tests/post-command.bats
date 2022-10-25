@@ -5,6 +5,7 @@ load '/usr/local/lib/bats/load.bash'
 post_command_hook="$PWD/hooks/post-command"
 prefix="BUILDKITE_PLUGIN_AWS_PUT_EVENT"
 prefix_entries="${prefix}_ENTRIES"
+export MOCK_PARSE_JSON=true
 
 function buildkite-agent() {
   echo "value"

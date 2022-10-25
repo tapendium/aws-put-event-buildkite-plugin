@@ -60,8 +60,7 @@ do
       PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
       export ENTRY_VALIDATE_"${COUNTER}"=$((PREVIOUS_COUNT ^ 2))
     }
-    echo "${!ENTRY_DETAIL}" >> tmp.json
-    ENTRIES[$COUNTER,0]="Detail=$( jq -R . tmp.json )"
+    ENTRIES[$COUNTER,0]="Detail=$( parse_json "${!ENTRY_DETAIL}" )"
   fi
 
   if [ -z "${!ENTRY_SOURCE}" ]
