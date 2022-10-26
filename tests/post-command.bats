@@ -102,5 +102,7 @@ function aws() {
 	run "$post_command_hook"
 	assert_success
 	assert_output --partial "[INFO] ENTRIES_SIZE 2"
+	assert_output --partial "[RNNNING COMMAND]"
+	assert_output --partial "aws events put-events --entries"
 }
 

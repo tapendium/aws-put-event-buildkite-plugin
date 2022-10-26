@@ -225,5 +225,5 @@ echo "[PUBLISH EVENT]"
 echo "[RNNNING COMMAND]"
 
 set -x
-aws events put-events "$ENTRIES_ARG" "${ADDITIONAL_ARGS[@]}" --output json
+aws events put-events $ENTRIES_ARG "${ADDITIONAL_ARGS[@]}" --output json
 set +x
