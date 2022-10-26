@@ -71,7 +71,7 @@ steps:
           - envato/cloudformation-output#v2.1.0:
               output:
                 - 'scale-event-bus:PrimaryEventBusArn:ap-southeast-2'
-          - tapendium/aws-put-event#v1.0.4b1:
+          - tapendium/aws-put-event#v1.0.4:
               debug: true
               entries:
                 - source: 'authn'
