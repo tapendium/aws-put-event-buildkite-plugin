@@ -11,3 +11,19 @@ services:
     image: buildkite/plugin-tester
     volumes:
       - ".:/plugin:ro"
+
+  format-shell:
+    image: mvdan/shfmt
+    volumes:
+      - '.:/data'
+    command:
+      - --write
+      - ./data
+
+  lint-shell-format:
+    image: mvdan/shfmt
+    volumes:
+      - '$PWD:/data'
+    command:
+      - --diff
+      - ./data
