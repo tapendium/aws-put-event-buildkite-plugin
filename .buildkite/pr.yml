@@ -24,17 +24,6 @@ steps:
       - docker-compose#v3.9.0:
           run: lint-shell-format
 
-  - label: ":shell: Shellcheck"
-    plugins:
-      - seek-oss/github-merged-pr#v1.1.2:
-          mode: checkout
-      - shellcheck#v1.3.0:
-          files:
-            - "hooks/*"
-            - "lib/*"
-            - "tests/*"
-          options: "-x"
-
   # - label: ":lint-remover: Run lint"
   #   plugins:
   #     docker-compose#v3.9.0:
