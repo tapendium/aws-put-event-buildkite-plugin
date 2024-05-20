@@ -16,7 +16,7 @@ steps:
       ENTRY_DETAIL_KEY: ENTRY_DETAIL
       ENTRY_DETAIL1_KEY: ENTRY_DETAIL1
     plugins:
-      - tapendium/aws-put-event#v1.0.6:
+      - tapendium/aws-put-event#v1.0.7:
           entries:
             - source: 'authn'
               resources: 'resource1,resource2'
@@ -37,7 +37,7 @@ steps:
   - command:
       - echo 'your commands'
     plugins:
-      - tapendium/aws-put-event#v1.0.6:
+      - tapendium/aws-put-event#v1.0.7:
           entries:
             - source: 'authn'
               resources: 'resource1,resource2'
@@ -71,7 +71,7 @@ steps:
           - envato/cloudformation-output#v2.1.0:
               output:
                 - 'scale-event-bus:PrimaryEventBusArn:ap-southeast-2'
-          - tapendium/aws-put-event#v1.0.6:
+          - tapendium/aws-put-event#v1.0.7:
               debug: true
               entries:
                 - source: 'authn'
