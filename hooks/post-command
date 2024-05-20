@@ -153,7 +153,11 @@ done
 ENTRIES_ARG=""
 for ((COUNTER = 0; COUNTER <= ENTRIES_SIZE - 1; COUNTER++)); do
 	if [ -n "${ENTRIES[$COUNTER, 0]}" ]; then
-		ENTRIES_ARG+=" ${ENTRIES[$COUNTER, 0]}"
+		if [ $COUNTER = 0 ]; then
+			ENTRIES_ARG+="${ENTRIES[$COUNTER, 0]}"
+		else
+			ENTRIES_ARG+=" ${ENTRIES[$COUNTER, 0]}"
+		fi
 	fi
 
 	if [ -n "${ENTRIES[$COUNTER, 1]}" ]; then

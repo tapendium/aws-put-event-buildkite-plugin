@@ -133,6 +133,6 @@ function mock_parse_json() {
 	assert_success
 	assert_output --partial "[INFO] ENTRIES_SIZE 2"
 	assert_output --partial "[RNNNING COMMAND]"
-	expected_output="aws events put-events --entries ' Detail=${MOCK_DETAIL_OUTPUT},Source=sourcevalue,DetailType=detailname,EventBusName=detailname Detail=${MOCK_DETAIL_OUTPUT},Source=sourcevalue,DetailType=detailname,EventBusName=detailname' --output json"
+	expected_output="aws events put-events --entries 'Detail=${MOCK_DETAIL_OUTPUT},Source=sourcevalue,DetailType=detailname,EventBusName=detailname Detail=${MOCK_DETAIL_OUTPUT},Source=sourcevalue,DetailType=detailname,EventBusName=detailname' --output json"
 	assert_output --partial "${expected_output}"
 }
