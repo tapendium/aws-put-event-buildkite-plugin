@@ -4,7 +4,7 @@ set -eo pipefail
 
 CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# shellcheck source=lib/shared.sh
+# shellcheck source=/dev/null
 . "$CWD/../lib/shared.sh"
 
 PREFIX="BUILDKITE_PLUGIN_AWS_PUT_EVENT_"
@@ -13,217 +13,200 @@ PREFIX_ENTRIES="${PREFIX}ENTRIES_"
 declare -A ENTRIES
 ENTRIES_SIZE=0
 
-if [[ "${!DEBUG_FLAG:-false}" =~ (true|on|1) ]] ; then
-  echo "~~~ :hammer: Enabling debug mode"
-  set -x
+if [[ "${!DEBUG_FLAG:-false}" =~ (true|on|1) ]]; then
+	echo "~~~ :hammer: Enabling debug mode"
+	set -x
 fi
 
-# interate and ENTRIES_SIZE 
+# interate and ENTRIES_SIZE
 while IFS='=' read -r name _; do
-  [[ $name =~ .*([0-9]) ]]
-  ENTRIES_INDEX=${BASH_REMATCH[1]}
-  ENTRY_VAR_NAME="ENTRY_${ENTRIES_INDEX}"
-  declare "ENTRY_ARG_${COUNTER}=''"
-  [ -z "${!ENTRY_VAR_NAME}" ] && {
-    export ENTRY_"${ENTRIES_INDEX}"=0
-  }
-  ENTRIES_SIZE=$(( ENTRIES_SIZE >= ENTRIES_INDEX + 1 ? ENTRIES_SIZE : ENTRIES_INDEX + 1 ))
+	[[ $name =~ .*([0-9]) ]]
+	ENTRIES_INDEX=${BASH_REMATCH[1]}
+	ENTRY_VAR_NAME="ENTRY_${ENTRIES_INDEX}"
+	declare "ENTRY_ARG_${COUNTER}=''"
+	[ -z "${!ENTRY_VAR_NAME}" ] && {
+		export ENTRY_"${ENTRIES_INDEX}"=0
+	}
+	ENTRIES_SIZE=$((ENTRIES_SIZE >= ENTRIES_INDEX + 1 ? ENTRIES_SIZE : ENTRIES_INDEX + 1))
 done < <(env | sort | grep "^${PREFIX_ENTRIES}[0-9]")
 
 echo [INFO] ENTRIES_SIZE $ENTRIES_SIZE
 
-for (( COUNTER=0; COUNTER<=ENTRIES_SIZE-1; COUNTER++ ))
-do
-  NUMBERED_PREFIX="${PREFIX_ENTRIES}${COUNTER}_"
-  ENTRY_DETAIL="${NUMBERED_PREFIX}DETAIL"
-  ENTRY_DETAIL_ENV="${NUMBERED_PREFIX}DETAIL_ENV"
-  ENTRY_SOURCE="${NUMBERED_PREFIX}SOURCE"
-  ENTRY_RESOURCES="${NUMBERED_PREFIX}RESOURCES"
-  ENTRY_TRACE_HEADER="${NUMBERED_PREFIX}TRACE_HEADER"
-  ENTRY_DETAIL_TYPE="${NUMBERED_PREFIX}DETAIL_TYPE"
-  ENTRY_EVENT_BUS_NAME="${NUMBERED_PREFIX}EVENT_BUS_NAME"
-  ENTRY_EVENT_BUS_NAME_ENV="${NUMBERED_PREFIX}EVENT_BUS_NAME_ENV"
-  export ENTRY_VALIDATE_"${COUNTER}"=31 #11111
+for ((COUNTER = 0; COUNTER <= ENTRIES_SIZE - 1; COUNTER++)); do
+	NUMBERED_PREFIX="${PREFIX_ENTRIES}${COUNTER}_"
+	ENTRY_DETAIL="${NUMBERED_PREFIX}DETAIL"
+	ENTRY_DETAIL_ENV="${NUMBERED_PREFIX}DETAIL_ENV"
+	ENTRY_SOURCE="${NUMBERED_PREFIX}SOURCE"
+	ENTRY_RESOURCES="${NUMBERED_PREFIX}RESOURCES"
+	ENTRY_TRACE_HEADER="${NUMBERED_PREFIX}TRACE_HEADER"
+	ENTRY_DETAIL_TYPE="${NUMBERED_PREFIX}DETAIL_TYPE"
+	ENTRY_EVENT_BUS_NAME="${NUMBERED_PREFIX}EVENT_BUS_NAME"
+	ENTRY_EVENT_BUS_NAME_ENV="${NUMBERED_PREFIX}EVENT_BUS_NAME_ENV"
+	export ENTRY_VALIDATE_"${COUNTER}"=31 #11111
 
-  if [ -n "${!ENTRY_DETAIL_ENV}" ]
-  then
-    # assign to detail
-    META_DATA_KEY="${!ENTRY_DETAIL_ENV}"
-    export ${NUMBERED_PREFIX}DETAIL="$(buildkite-agent meta-data get "${!META_DATA_KEY}")"
-  fi
+	if [ -n "${!ENTRY_DETAIL_ENV}" ]; then
+		# assign to detail
+		META_DATA_KEY="${!ENTRY_DETAIL_ENV}"
+		export ${NUMBERED_PREFIX}DETAIL="$(buildkite-agent meta-data get "${!META_DATA_KEY}")"
+	fi
 
-  if [ -z "${!ENTRY_DETAIL}" ]
-  then
-    PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
-    export ENTRY_VALIDATE_"${COUNTER}"="$((PREVIOUS_COUNT ^ 1))"
-  else
-    ! is_valid_json "${!ENTRY_DETAIL}" && {
-      PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
-      export ENTRY_VALIDATE_"${COUNTER}"=$((PREVIOUS_COUNT ^ 2))
-    }
-    ENTRIES[$COUNTER,0]="Detail=$( parse_json "${!ENTRY_DETAIL}" )"
-  fi
+	if [ -z "${!ENTRY_DETAIL}" ]; then
+		PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+		export ENTRY_VALIDATE_"${COUNTER}"="$((PREVIOUS_COUNT ^ 1))"
+	else
+		! is_valid_json "${!ENTRY_DETAIL}" && {
+			PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+			export ENTRY_VALIDATE_"${COUNTER}"=$((PREVIOUS_COUNT ^ 2))
+		}
+		ENTRIES[$COUNTER, 0]="Detail=$(parse_json "${!ENTRY_DETAIL}")"
+	fi
 
-  if [ -z "${!ENTRY_SOURCE}" ]
-  then
-    PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
-    export ENTRY_VALIDATE_"${COUNTER}"=$((PREVIOUS_COUNT ^ 4))
-  else
-    ENTRIES[$COUNTER,1]="Source=${!ENTRY_SOURCE}"
-  fi
+	if [ -z "${!ENTRY_SOURCE}" ]; then
+		PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+		export ENTRY_VALIDATE_"${COUNTER}"=$((PREVIOUS_COUNT ^ 4))
+	else
+		ENTRIES[$COUNTER, 1]="Source=${!ENTRY_SOURCE}"
+	fi
 
-  if [ -z "${!ENTRY_DETAIL_TYPE}" ]
-  then
-    PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
-    export ENTRY_VALIDATE_"${COUNTER}"=$((PREVIOUS_COUNT ^ 8))
-  else
-    ENTRIES[$COUNTER,2]="DetailType=${!ENTRY_DETAIL_TYPE}"
-  fi
+	if [ -z "${!ENTRY_DETAIL_TYPE}" ]; then
+		PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+		export ENTRY_VALIDATE_"${COUNTER}"=$((PREVIOUS_COUNT ^ 8))
+	else
+		ENTRIES[$COUNTER, 2]="DetailType=${!ENTRY_DETAIL_TYPE}"
+	fi
 
-  if [ -n "${!ENTRY_EVENT_BUS_NAME_ENV}" ]
-  then
-    META_DATA_KEY="${!ENTRY_EVENT_BUS_NAME_ENV}"
-    export ${NUMBERED_PREFIX}EVENT_BUS_NAME="$(buildkite-agent meta-data get "${!META_DATA_KEY}")"
-  fi
+	if [ -n "${!ENTRY_EVENT_BUS_NAME_ENV}" ]; then
+		META_DATA_KEY="${!ENTRY_EVENT_BUS_NAME_ENV}"
+		export ${NUMBERED_PREFIX}EVENT_BUS_NAME="$(buildkite-agent meta-data get "${!META_DATA_KEY}")"
+	fi
 
-  if [ -z "${!ENTRY_EVENT_BUS_NAME}" ]
-  then
-    PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
-    export ENTRY_VALIDATE_"${COUNTER}"=$((PREVIOUS_COUNT ^ 16))
-  else
-    ENTRIES[$COUNTER,3]="EventBusName=${!ENTRY_EVENT_BUS_NAME}"
-  fi
+	if [ -z "${!ENTRY_EVENT_BUS_NAME}" ]; then
+		PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+		export ENTRY_VALIDATE_"${COUNTER}"=$((PREVIOUS_COUNT ^ 16))
+	else
+		ENTRIES[$COUNTER, 3]="EventBusName=${!ENTRY_EVENT_BUS_NAME}"
+	fi
 
-  if [ -n "${!ENTRY_RESOURCES}" ]
-  then
-    ENTRIES[$COUNTER,4]="Resources=${!ENTRY_RESOURCES}"
-  fi
+	if [ -n "${!ENTRY_RESOURCES}" ]; then
+		ENTRIES[$COUNTER, 4]="Resources=${!ENTRY_RESOURCES}"
+	fi
 
-  if [ -n "${!ENTRY_TRACE_HEADER}" ]
-  then
-    ENTRIES[$COUNTER,5]="TraceHeader=${!ENTRY_TRACE_HEADER}"
-  fi
+	if [ -n "${!ENTRY_TRACE_HEADER}" ]; then
+		ENTRIES[$COUNTER, 5]="TraceHeader=${!ENTRY_TRACE_HEADER}"
+	fi
 
 done
 
 VALID=1
-for (( COUNTER=0; COUNTER<=ENTRIES_SIZE-1; COUNTER++ ))
-do
-  PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
-  if [ "$PREVIOUS_COUNT" -eq 31 ]; then
-    continue
-  fi
+for ((COUNTER = 0; COUNTER <= ENTRIES_SIZE - 1; COUNTER++)); do
+	PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+	if [ "$PREVIOUS_COUNT" -eq 31 ]; then
+		continue
+	fi
 
-  VALID=0
+	VALID=0
 
-  [ $(( PREVIOUS_COUNT & 1 )) -eq 0 ] && {
-    echo "[ERROR] Entry[$COUNTER]: detail or detail-env not defined." 
-  }
+	[ $((PREVIOUS_COUNT & 1)) -eq 0 ] && {
+		echo "[ERROR] Entry[$COUNTER]: detail or detail-env not defined."
+	}
 
-  export ENTRY_VALIDATE_"$COUNTER"=$((PREVIOUS_COUNT >> 1))
+	export ENTRY_VALIDATE_"$COUNTER"=$((PREVIOUS_COUNT >> 1))
 
-  PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
-  [ $(( PREVIOUS_COUNT & 1 )) -eq 0 ] && {
-    echo "[ERROR] Entry[$COUNTER]: detail has invalid json" 
-  }
+	PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+	[ $((PREVIOUS_COUNT & 1)) -eq 0 ] && {
+		echo "[ERROR] Entry[$COUNTER]: detail has invalid json"
+	}
 
-  export ENTRY_VALIDATE_"$COUNTER"=$((PREVIOUS_COUNT >> 1))
+	export ENTRY_VALIDATE_"$COUNTER"=$((PREVIOUS_COUNT >> 1))
 
-  PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
-  [ $(( PREVIOUS_COUNT & 1 )) -eq 0 ] && {
-    echo "[ERROR] Entry[$COUNTER]: source not defined." 
-  }
+	PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+	[ $((PREVIOUS_COUNT & 1)) -eq 0 ] && {
+		echo "[ERROR] Entry[$COUNTER]: source not defined."
+	}
 
-  export ENTRY_VALIDATE_"$COUNTER"=$((PREVIOUS_COUNT >> 1))
+	export ENTRY_VALIDATE_"$COUNTER"=$((PREVIOUS_COUNT >> 1))
 
-  PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
-  [ $(( PREVIOUS_COUNT & 1 )) -eq 0 ] && {
-    echo "[ERROR] Entry[$COUNTER]: detail-type not defined." 
-  }
+	PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+	[ $((PREVIOUS_COUNT & 1)) -eq 0 ] && {
+		echo "[ERROR] Entry[$COUNTER]: detail-type not defined."
+	}
 
-  export ENTRY_VALIDATE_"$COUNTER"=$((PREVIOUS_COUNT >> 1))
+	export ENTRY_VALIDATE_"$COUNTER"=$((PREVIOUS_COUNT >> 1))
 
-  PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
-  [ $(( PREVIOUS_COUNT & 1 )) -eq 0 ] && {
-    echo "[ERROR] Entry[$COUNTER]: event-bus-name not defined." 
-  }
+	PREVIOUS_COUNT="$(compose_variable "ENTRY_VALIDATE_${COUNTER}")"
+	[ $((PREVIOUS_COUNT & 1)) -eq 0 ] && {
+		echo "[ERROR] Entry[$COUNTER]: event-bus-name not defined."
+	}
 done
 
 [ $ENTRIES_SIZE -eq 0 ] && {
-  # warn and let it pass
-  echo "[WARNING] At least one entry needs to be defined" 1>&2
-  exit 1
+	# warn and let it pass
+	echo "[WARNING] At least one entry needs to be defined" 1>&2
+	exit 1
 }
 
 [ $VALID -eq 0 ] && {
-  echo "[ERROR] Process failed with errors."
-  exit 2
+	echo "[ERROR] Process failed with errors."
+	exit 2
 }
 
-ENTRIES_ARG="--entries"
-for (( COUNTER=0; COUNTER<=ENTRIES_SIZE-1; COUNTER++ ))
-do
-  if [ -n "${ENTRIES[$COUNTER,0]}" ]
-  then
-    ENTRIES_ARG+=" ${ENTRIES[$COUNTER,0]}"
-  fi
-  
-  if [ -n "${ENTRIES[$COUNTER,1]}" ]
-  then
-    ENTRIES_ARG+=",${ENTRIES[$COUNTER,1]}"
-  fi
+ENTRIES_ARG=""
+for ((COUNTER = 0; COUNTER <= ENTRIES_SIZE - 1; COUNTER++)); do
+	if [ -n "${ENTRIES[$COUNTER, 0]}" ]; then
+		ENTRIES_ARG+=" ${ENTRIES[$COUNTER, 0]}"
+	fi
 
-  if [ -n "${ENTRIES[$COUNTER,2]}" ]
-  then
-    ENTRIES_ARG+=",${ENTRIES[$COUNTER,2]}"
-  fi
+	if [ -n "${ENTRIES[$COUNTER, 1]}" ]; then
+		ENTRIES_ARG+=",${ENTRIES[$COUNTER, 1]}"
+	fi
 
-  if [ -n "${ENTRIES[$COUNTER,3]}" ]
-  then
-    ENTRIES_ARG+=",${ENTRIES[$COUNTER,3]}"
-  fi
+	if [ -n "${ENTRIES[$COUNTER, 2]}" ]; then
+		ENTRIES_ARG+=",${ENTRIES[$COUNTER, 2]}"
+	fi
 
-  if [ -n "${ENTRIES[$COUNTER,4]}" ]
-  then
-    ENTRIES_ARG+=",${ENTRIES[$COUNTER,4]}"
-  fi
+	if [ -n "${ENTRIES[$COUNTER, 3]}" ]; then
+		ENTRIES_ARG+=",${ENTRIES[$COUNTER, 3]}"
+	fi
 
-  if [ -n "${ENTRIES[$COUNTER,5]}" ]
-  then
-    ENTRIES_ARG+=",${ENTRIES[$COUNTER,5]}"
-  fi
+	if [ -n "${ENTRIES[$COUNTER, 4]}" ]; then
+		ENTRIES_ARG+=",${ENTRIES[$COUNTER, 4]}"
+	fi
+
+	if [ -n "${ENTRIES[$COUNTER, 5]}" ]; then
+		ENTRIES_ARG+=",${ENTRIES[$COUNTER, 5]}"
+	fi
 done
 
 ADDITIONAL_ARGS=()
 while IFS='=' read -r name _; do
-  if [[ $name =~ (ENDPOINT_URL)$ ]]; then
-    ADDITIONAL_ARGS+=("--endpoint-url" "${!name}")
-  fi
+	if [[ $name =~ (ENDPOINT_URL)$ ]]; then
+		ADDITIONAL_ARGS+=("--endpoint-url" "${!name}")
+	fi
 
-  if [[ $name =~ (ENDPOINT_ID)$ ]]; then
-    ADDITIONAL_ARGS+=("--endpoint-id" "${!name}")
-  fi
+	if [[ $name =~ (ENDPOINT_ID)$ ]]; then
+		ADDITIONAL_ARGS+=("--endpoint-id" "${!name}")
+	fi
 
-  if [[ $name =~ (CLI_INPUT_JSON)$ ]]; then
-    ADDITIONAL_ARGS+=("--cli-input-json" "${!name}")
-  fi
+	if [[ $name =~ (CLI_INPUT_JSON)$ ]]; then
+		ADDITIONAL_ARGS+=("--cli-input-json" "${!name}")
+	fi
 
-  if [[ $name =~ (GENERATE_CLI_SKELETON)$ ]]; then
-    ADDITIONAL_ARGS+=("--generate-cli-skeleton" "${!name}")
-  fi
+	if [[ $name =~ (GENERATE_CLI_SKELETON)$ ]]; then
+		ADDITIONAL_ARGS+=("--generate-cli-skeleton" "${!name}")
+	fi
 
-  if [[ $name =~ (REGION)$ ]]; then
-    ADDITIONAL_ARGS+=("--region" "${!name}")
-  fi
+	if [[ $name =~ (REGION)$ ]]; then
+		ADDITIONAL_ARGS+=("--region" "${!name}")
+	fi
 
-  if [[ $name =~ (DEBUG)$ ]]; then
-    ADDITIONAL_ARGS+=("--debug")
-  fi
+	if [[ $name =~ (DEBUG)$ ]]; then
+		ADDITIONAL_ARGS+=("--debug")
+	fi
 done < <(env | sort | grep "^${PREFIX}")
 
 echo "[PUBLISH EVENT]"
 echo "[RNNNING COMMAND]"
 
 set -x
-aws events put-events $ENTRIES_ARG "${ADDITIONAL_ARGS[@]}" --output json
+aws events put-events --entries "$ENTRIES_ARG" "${ADDITIONAL_ARGS[@]}" --output json
 set +x

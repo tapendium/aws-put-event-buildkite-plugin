@@ -1,0 +1,15 @@
+{
+  "userId": "0000000000000000000000000",
+  "effectiveUserId": "0000000000000000000000000",
+  "data": {
+    "name": "",
+    "languageConfig": {
+      "en": {
+        "login.form.login": "Login",
+        "login.form.login.successful": "Login Successful",
+        "login.form.invalid.email": "Invalid Email",
+        "login.form.register": "Register"
+      }
+    }
+  }
+}

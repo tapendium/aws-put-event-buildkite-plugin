@@ -1,3 +1,8 @@
+tapendium-aliases:
+  merge-main: &merge-main
+    seek-oss/github-merged-pr#v1.1.2:
+      mode: checkout
+
 steps:
   - label: ":hammer: Run unit tests"
     plugins:
@@ -5,16 +10,19 @@ steps:
         run: tests
         # cli-version: 2
 
-  - label: ":shell: Shellcheck"
+  - label: ':lint-roller: Check shell script syntax'
     plugins:
-      - seek-oss/github-merged-pr#v1.1.2:
-          mode: checkout
+      - *merge-main
       - shellcheck#v1.3.0:
           files:
-            - "hooks/*"
-            - "lib/*"
-            - "tests/*"
-          options: "-x"
+            - lib/*
+            - hooks/*
+
+  - label: ':lint-roller: Check shell script formatting'
+    plugins:
+      - *merge-main
+      - docker-compose#v3.9.0:
+          run: lint-shell-format
 
   # - label: ":lint-remover: Run lint"
   #   plugins:
